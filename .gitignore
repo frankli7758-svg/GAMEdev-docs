@@ -1,0 +1,17 @@
+# ── Unity 工程有自己的 Git 仓库，不要在根仓库里嵌套 ──
+/ZombieExtraction/
+
+# ── 临时备份（体积大，且随时可重建，不属于源码）──
+/.workbuddy/backups/
+
+# ── 临时脚本（每次任务随手写的，用完即删）──
+/.workbuddy/tmp_*
+
+# ── 构建 / 编译日志（不是源码，也没有回溯价值）──
+*.log
+
+# ── 系统与编辑器垃圾 ──
+Thumbs.db
+Desktop.ini
+.DS_Store
+*.swp
