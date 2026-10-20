@@ -47,4 +47,9 @@
 - Unity 编辑器：`D:\Unity\Editors\6000.3.26f1\Editor\Unity.exe`；Git 2.55、VS Code + C# Dev Kit 已装好（阶段 0 完成）。
 - Unity 6 国内 CDN 无安装包，下载需非 CN/港澳台节点；`Tools\unity_fetch.py` 支持多连接分片下载。
 - 任何东西不装 C 盘。
-- `D:\Game\GAMEdev` 目前不是 Git 仓库（git init 属阶段 1 任务）。
+- **双仓库结构（2026-10-20 建立，务必记住）**：
+  - `D:\Game\GAMEdev\.git` —— 根仓库（`master`，首提交 `4dd6f75`），管 `Docs/`、`AGENTS.md`、`Tools/unity_fetch.py`、`.workbuddy/memory/`
+  - `D:\Game\GAMEdev\ZombieExtraction\.git` —— Unity 工程仓库，只管工程本身
+  - 根仓库的 `.gitignore` **排除 `ZombieExtraction/`**（避免嵌套 gitlink）、`.workbuddy/backups/`、`.workbuddy/tmp_*`、`*.log`
+  - 两仓库**互不跟踪**（根仓库跟踪 Unity 目录的文件数 = 0）。**改文档提交根仓库，改代码提交 Unity 仓库**
+  - 均无远程仓库；本地身份 `Marie <marie@local>`（仓库级配置，未改全局）
