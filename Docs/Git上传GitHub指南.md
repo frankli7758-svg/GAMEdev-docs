@@ -269,6 +269,61 @@ git config --global --unset https.proxy
 流程几乎一样（gitee.com → 新建仓库 → 推送），只是地址不同，而且 Gitee 支持账号密码。
 **将来想换回 GitHub，只改 `git remote set-url` 一行即可，历史不会丢。**
 
+### 9.1 推送超时 / 卡住不动？先怀疑代理
+
+**实测记录（2026-10-21）**：
+
+| 情况 | 结果 |
+|---|---|
+| 走代理 `127.0.0.1:63386` | ❌ 超时 / 502 |
+| 直连 github.com | ✅ 200 OK |
+
+Git 底层的 libcurl **会读 `http_proxy` / `https_proxy` 环境变量**。
+如果系统里（或某个终端会话里）残留了指向失效代理的变量，`git push` 就会一直挂着直到超时。
+
+**临时绕过（只在这次命令生效）：**
+
+```bash
+http_proxy= https_proxy= HTTP_PROXY= HTTPS_PROXY= git push
+```
+
+**永久检查：**
+
+```bash
+git config --global --get http.proxy    # 有值说明 git 自己在走代理
+echo $http_proxy $https_proxy           # 有值说明环境变量在起作用
+```
+
+要清掉 git 自己配的代理：
+
+```bash
+git config --global --unset http.proxy
+git config --global --unset https.proxy
+```
+
+### 9.2 Token 撤销后怎么继续推（推荐用 GCM，别再手写 Token）
+
+撤销 Token 后，`git push` 会报：
+
+```
+remote: Invalid username or token. Password authentication is not supported for Git operations.
+fatal: Authentication failed for 'https://github.com/...'
+```
+
+**这不是仓库坏了，只是凭据失效。** 处理方式：
+
+1. 确认 Git for Windows 的凭据管理器在（**默认就有**，不用装）：
+   ```bash
+   git config --get credential.helper      # 应输出 manager
+   ```
+2. 清掉旧的失效凭据（Windows 凭据管理器里那条 `git:https://github.com`）：
+   - 控制面板 → **凭据管理器（Credential Manager）** → **Windows 凭据**
+   - 找到 `git:https://github.com` → **删除**
+3. 重新 `git push` → 会**自动弹出浏览器**让你点一下登录 → 之后自动记住，**再也不用手写 Token**
+
+> 这就是推荐做法：**Token 只在别人（或 AI）代你推送时临时用一次，日常交给自己电脑上的 GCM**。
+> Token 一旦贴到聊天记录里就等于泄露，用完必须去 GitHub 删除。
+
 ---
 
 ## 10. 安全提醒（认真看）
