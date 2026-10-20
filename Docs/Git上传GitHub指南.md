@@ -80,6 +80,41 @@ https://github.com/你的用户名/GAMEdev-docs.git
 > ⚠️ **这串字符只显示这一次**，刷新页面就看不到了。丢了只能重新生成。
 > ⚠️ **它是密码**，不要发给任何人、不要写进代码、不要提交到仓库。
 
+### 3.1 那一长串 Scope 到底勾哪个？（只看这一条）
+
+> **口诀：只勾 `repo`，其余留空；`delete_repo` 永远别碰。**
+
+GitHub 那个页面会列 30 多个权限项，很容易看花眼。实际只需要**最上面第一个 `repo`**。
+
+| Scope | 勾不勾 | 干什么用的 |
+|---|---|---|
+| **`repo`** | ✅ **要** | 推送、拉取、读写仓库（含私有仓库）—— **唯一需要的** |
+| `repo:status` | ✅ 自动带 | 勾了 `repo` 后 GitHub 自动勾上，不用管 |
+| `repo_deployment` | ✅ 自动带 | 同上 |
+| `public_repo` | ✅ 自动带 | 同上 |
+| `repo:invite` | ✅ 自动带 | 同上 |
+| `security_events` | ✅ 自动带 | 同上 |
+| `workflow` | ❌ | 只有要改 GitHub Actions 工作流才需要 |
+| `write:packages` / `read:packages` / `delete:packages` | ❌ | 只有要发 NuGet / npm 包才需要 |
+| `admin:org` 以及它下面所有 `org` 项 | ❌ | 管理组织、团队才需要 |
+| `admin:public_key` / `admin:gpg_key` / `admin:ssh_signing_key` | ❌ | 管理密钥才需要 |
+| `admin:repo_hook` / `write:repo_hook` / `read:repo_hook` / `admin:org_hook` | ❌ | 配 Webhook 才需要 |
+| `gist` | ❌ | 存代码片段才需要 |
+| `notifications` | ❌ | 不需要 |
+| `user` / `read:user` / `user:email` / `user:follow` | ❌ | 读个人资料才需要 |
+| **`delete_repo`** | ❌ **绝对别勾** | ⚠️ 勾了它，Token 一旦泄露，**别人能删掉你整个仓库** |
+| `discussions` / `read:discussion` | ❌ | 不需要 |
+| `admin:enterprise` 及其下面所有 | ❌ | 企业功能 |
+| `audit_log` / `read:audit_log` | ❌ | 不需要 |
+| `codespace` / `codespace:secrets` | ❌ | 云端 IDE |
+| `copilot` / `manage_billing:copilot` | ❌ | 不需要 |
+| `project` / `read:project` | ❌ | 项目管理看板 |
+
+**为什么勾这么少**：Token 就是密码，权限给多了等于把钥匙串全交出去。推送代码只需要 `repo`，多勾一项就多一分风险。
+
+> 页面上"笔记（Note）"填 `GAMEdev 推送` 即可 —— 只是给你自己在 Token 列表里辨认用。
+> "到期日（Expiration）"选 `90 days` 较安全；嫌麻烦可以选 `No expiration`，但风险更高。
+
 ---
 
 ## 4. 本地把这个仓库接上 GitHub 并推送
