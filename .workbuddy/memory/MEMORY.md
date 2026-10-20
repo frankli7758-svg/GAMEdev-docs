@@ -52,4 +52,6 @@
   - `D:\Game\GAMEdev\ZombieExtraction\.git` —— Unity 工程仓库，只管工程本身
   - 根仓库的 `.gitignore` **排除 `ZombieExtraction/`**（避免嵌套 gitlink）、`.workbuddy/backups/`、`.workbuddy/tmp_*`、`*.log`
   - 两仓库**互不跟踪**（根仓库跟踪 Unity 目录的文件数 = 0）。**改文档提交根仓库，改代码提交 Unity 仓库**
-  - 均无远程仓库；本地身份 `Marie <marie@local>`（仓库级配置，未改全局）
+  - **远程（2026-10-20 已上传）**：文档 → `https://github.com/frankli7758-svg/GAMEdev-docs`（公开）；代码 → `https://github.com/frankli7758-svg/ZombieExtraction`（**私有**）
+  - 本地身份 `Marie <marie@local>`（已设全局）；GitHub 账号 `frankli7758-svg`
+  - 推送**不要把 Token 写进 `.git/config`**：用 `git -c http.extraheader="AUTHORIZATION: basic $B64" push`，推完 `grep ghp_ .git/config` 应为空
