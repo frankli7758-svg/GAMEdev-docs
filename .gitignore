@@ -9,6 +9,8 @@
 
 # ── 构建 / 编译日志（不是源码，也没有回溯价值）──
 *.log
+# batchmode 跑 EditMode 测试时生成的结果文件（每次内容不同）
+/Tools/test_result.xml
 
 # ── 系统与编辑器垃圾 ──
 Thumbs.db
