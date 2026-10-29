@@ -1,0 +1,639 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<title>营地 · 主界面布局原型 v3（出击改为流程）</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root{
+  --bg:#0B0C0E; --panel:#16181B; --raised:#1E2024; --sunken:#101012;
+  --line:#33363D; --accent:#F0A03D; --accent-dim:rgba(240,160,61,0.16);
+  --text:#EBEDF2; --dim:#9EA6B3; --muted:#6B7380; --ok:#5CC782; --danger:#DB4F4D;
+}
+html,body{height:100%;background:#060708;overflow:hidden;
+  font-family:"Microsoft YaHei","PingFang SC","Noto Sans SC",system-ui,sans-serif;
+  color:var(--text);-webkit-font-smoothing:antialiased;}
+#stage{position:absolute;left:50%;top:50%;width:1920px;height:1080px;
+  transform-origin:center center;background:var(--bg);overflow:hidden;}
+
+#base{position:absolute;inset:0;}
+.floor{position:absolute;inset:0;
+  background:
+    repeating-linear-gradient(90deg, rgba(255,255,255,0.030) 0 1px, transparent 1px 96px),
+    repeating-linear-gradient(0deg,  rgba(255,255,255,0.030) 0 1px, transparent 1px 96px);}
+.blk{position:absolute;background:#12141A;border:1px solid #262A31;border-radius:4px;
+  display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:15px;letter-spacing:1px;}
+.me{position:absolute;left:700px;top:830px;width:22px;height:22px;border-radius:50%;
+  background:var(--accent);box-shadow:0 0 0 8px rgba(240,160,61,0.14);}
+#openbtn{position:absolute;right:36px;top:36px;padding:12px 22px;font-size:16px;
+  background:var(--raised);color:var(--text);border:1px solid var(--line);border-radius:6px;
+  cursor:pointer;font-family:inherit;}
+#openbtn:hover{border-color:var(--accent);color:var(--accent);}
+.basehint{position:absolute;left:50%;bottom:44px;transform:translateX(-50%);
+  font-size:16px;color:var(--muted);}
+
+#overlay{position:absolute;inset:0;background:rgba(6,7,8,0.62);
+  display:flex;align-items:center;justify-content:center;transition:opacity .18s;}
+#overlay.hidden{opacity:0;pointer-events:none;}
+#panel{width:1800px;height:960px;background:var(--bg);border:1px solid var(--line);
+  border-radius:10px;display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 24px 80px rgba(0,0,0,0.6);}
+
+header{height:92px;flex:0 0 auto;display:flex;align-items:center;justify-content:space-between;
+  padding:0 32px;border-bottom:1px solid var(--line);}
+.prof{display:flex;align-items:center;gap:16px;}
+.ava{width:52px;height:52px;border-radius:8px;background:var(--raised);
+  border:1px solid var(--line);display:flex;align-items:center;justify-content:center;
+  font-size:18px;font-weight:500;color:var(--accent);}
+.pn{font-size:17px;font-weight:500;}
+.pl{font-size:13px;color:var(--dim);margin-top:5px;font-variant-numeric:tabular-nums;}
+.xbar{width:160px;height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin-left:6px;}
+.xbar>i{display:block;height:100%;background:var(--accent);}
+.hmid{font-size:16px;color:var(--dim);}
+.hmid b{color:var(--text);font-weight:500;}
+.hright{display:flex;align-items:center;gap:18px;}
+.cur{font-size:26px;font-weight:500;color:var(--accent);font-variant-numeric:tabular-nums;}
+.cur span{font-size:17px;margin-right:2px;}
+.iconbtn{padding:11px 18px;font-size:14px;background:var(--raised);color:var(--dim);
+  border:1px solid var(--line);border-radius:6px;cursor:pointer;font-family:inherit;}
+.iconbtn:hover{color:var(--text);border-color:var(--dim);}
+
+main{flex:1;min-height:0;padding:26px 32px 22px;display:flex;flex-direction:column;}
+.subtabs{display:flex;gap:6px;margin-bottom:18px;flex:0 0 auto;}
+.st{padding:9px 20px;font-size:15px;border-radius:6px;background:var(--raised);
+  color:var(--dim);cursor:pointer;border:1px solid var(--line);}
+.st:hover{color:var(--text);}
+.st.on{background:var(--accent-dim);color:var(--accent);border-color:rgba(240,160,61,0.35);}
+.view{flex:1;min-height:0;display:none;flex-direction:column;}
+.view.on{display:flex;}
+.sub{display:none;flex:1;min-height:0;flex-direction:column;}
+.sub.on{display:flex;}
+
+footer.depts{height:106px;flex:0 0 auto;display:flex;align-items:center;gap:10px;
+  padding:0 24px;border-top:1px solid var(--line);background:var(--panel);}
+.dept{width:296px;flex:0 0 296px;height:74px;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;border-radius:8px;cursor:pointer;
+  border:1px solid transparent;}
+.dept:hover{background:var(--raised);}
+.dept.on{background:var(--accent-dim);border-color:rgba(240,160,61,0.35);}
+.dn{font-size:17px;color:var(--dim);font-weight:500;}
+.dept.on .dn{color:var(--accent);}
+.ds{font-size:12px;color:var(--muted);margin-top:6px;}
+.go{margin-left:auto;height:74px;width:272px;border-radius:8px;background:var(--accent);
+  color:#141414;font-size:20px;font-weight:500;border:0;cursor:pointer;font-family:inherit;}
+.go:hover{filter:brightness(1.08);}
+.go small{display:block;font-size:12px;font-weight:400;margin-top:4px;opacity:.75;}
+
+/* ===== 军械部 ===== */
+.zones{flex:1;display:flex;gap:18px;min-height:0;}
+.zcol{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:20px;display:flex;flex-direction:column;min-width:0;}
+.zcol.side{width:356px;flex:0 0 356px;}
+.zcol.mid{flex:1;}
+.zhead{font-size:16px;font-weight:500;margin-bottom:14px;display:flex;
+  justify-content:space-between;align-items:center;}
+.zhead span{font-size:12px;color:var(--muted);font-weight:400;}
+.gun{height:130px;border:1px dashed var(--muted);border-radius:6px;display:flex;
+  align-items:center;justify-content:center;color:var(--muted);font-size:13px;margin-bottom:14px;}
+.slot{display:flex;justify-content:space-between;align-items:center;height:38px;
+  border:1px dashed #3A3E46;border-radius:5px;padding:0 12px;margin-bottom:7px;
+  font-size:13px;color:var(--muted);}
+.slot.filled{border-style:solid;border-color:rgba(240,160,61,0.4);color:var(--accent);}
+.rangeview{flex:1;border:1px dashed var(--muted);border-radius:6px;display:flex;
+  align-items:center;justify-content:center;color:var(--muted);font-size:13px;margin-bottom:14px;}
+.kv{display:flex;justify-content:space-between;font-size:14px;padding:8px 0;color:var(--dim);}
+.kv b{color:var(--text);font-weight:500;font-variant-numeric:tabular-nums;}
+.shoprow{display:flex;justify-content:space-between;align-items:center;font-size:14px;
+  padding:11px 0;border-bottom:1px solid var(--line);}
+.shoprow .p{color:var(--accent);font-variant-numeric:tabular-nums;}
+.gbtn{height:42px;border-radius:6px;background:var(--raised);color:var(--text);
+  border:1px solid var(--line);font-size:14px;cursor:pointer;font-family:inherit;margin-top:12px;}
+.gbtn:hover{border-color:var(--accent);color:var(--accent);}
+.sbtn{height:50px;border-radius:8px;background:var(--accent);color:#141414;border:0;
+  font-size:16px;font-weight:500;cursor:pointer;font-family:inherit;margin-top:12px;}
+
+/* ===== 后勤部 ===== */
+.wh{flex:1;display:flex;gap:18px;min-height:0;}
+.wcol{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:18px;
+  display:flex;flex-direction:column;min-width:0;}
+.wcol.role{width:250px;flex:0 0 250px;}
+.wcol.body{width:400px;flex:0 0 400px;}
+.wcol.store{flex:1;}
+.ctitle{font-size:15px;font-weight:500;margin-bottom:10px;display:flex;justify-content:space-between;}
+.ctitle span{font-size:12px;color:var(--muted);font-weight:400;}
+.grid{display:grid;gap:2px;}
+.cell{background:var(--sunken);border:1px solid #23262C;border-radius:2px;}
+.cell.f1{background:#555C62;} .cell.f2{background:#3D5C55;} .cell.f3{background:#395269;}
+.cell.f4{background:#4A4562;} .cell.f5{background:#655141;}
+.slotbox{height:52px;border:1px dashed #3A3E46;border-radius:5px;margin-bottom:8px;
+  display:flex;align-items:center;justify-content:center;font-size:13px;color:var(--muted);}
+
+.trade{flex:1;display:flex;gap:18px;min-height:0;}
+.mlist{width:300px;flex:0 0 300px;background:var(--panel);border:1px solid var(--line);
+  border-radius:8px;padding:14px;display:flex;flex-direction:column;gap:8px;}
+.m{height:66px;border-radius:6px;border:1px solid var(--line);background:var(--raised);
+  padding:12px 14px;cursor:pointer;display:flex;flex-direction:column;justify-content:center;}
+.m:hover{border-color:var(--dim);}
+.m.on{background:var(--accent-dim);border-color:rgba(240,160,61,0.4);}
+.m .mn{font-size:16px;font-weight:500;color:var(--text);}
+.m.on .mn{color:var(--accent);}
+.m .ms{font-size:12px;color:var(--muted);margin-top:5px;}
+.shelf{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:20px;display:flex;flex-direction:column;min-width:0;}
+
+/* ===== 指挥部 ===== */
+.big{font-size:58px;font-weight:500;line-height:1;color:var(--accent);}
+.facrow{display:flex;justify-content:space-between;align-items:center;
+  padding:16px 0;border-bottom:1px solid var(--line);font-size:16px;}
+.facrow .lv{color:var(--dim);font-size:14px;}
+.upbox{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:24px;max-width:720px;}
+.cond{display:flex;justify-content:space-between;font-size:15px;padding:9px 0;color:var(--dim);}
+.ok{color:var(--ok);} .bad{color:var(--danger);}
+.blocked{margin-top:14px;padding:14px;border-radius:6px;background:rgba(219,79,77,0.10);
+  border:1px solid rgba(219,79,77,0.35);color:#F09595;font-size:14px;}
+.upbtn{margin-top:16px;height:50px;width:100%;border-radius:8px;font-size:16px;
+  font-family:inherit;background:var(--raised);color:var(--muted);border:1px solid var(--line);
+  cursor:not-allowed;}
+.cmd{flex:1;display:flex;gap:18px;min-height:0;}
+.cmd .tall{flex:1;background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:24px;display:flex;flex-direction:column;}
+.dialog{background:var(--sunken);border-radius:8px;padding:18px;font-size:15px;
+  color:var(--dim);line-height:1.85;flex:1;}
+.choice{margin-top:10px;padding:13px 16px;border:1px solid var(--line);border-radius:6px;
+  font-size:15px;color:var(--text);cursor:pointer;background:var(--raised);}
+.choice:hover{border-color:var(--accent);color:var(--accent);}
+.stbar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:10px;}
+.stbar>i{display:block;height:100%;background:var(--accent);}
+
+/* ===== 出击流程 ===== */
+.sortiehead{display:flex;align-items:center;gap:16px;margin-bottom:20px;flex:0 0 auto;}
+.backbtn{padding:10px 18px;font-size:14px;background:var(--raised);color:var(--dim);
+  border:1px solid var(--line);border-radius:6px;cursor:pointer;font-family:inherit;}
+.backbtn:hover{color:var(--text);border-color:var(--dim);}
+.sortiehead h1{font-size:24px;font-weight:500;}
+.sortiehead .sm{font-size:14px;color:var(--muted);margin-left:auto;}
+.steps{flex:1;display:flex;gap:18px;min-height:0;}
+.stepcol{background:var(--panel);border:1px solid var(--line);border-radius:8px;
+  padding:20px;display:flex;flex-direction:column;min-width:0;}
+.stepcol.a{flex:1.15;}
+.stepcol.b{flex:1;}
+.stepcol.c{flex:0.92;}
+.steptitle{display:flex;align-items:center;gap:10px;font-size:16px;font-weight:500;margin-bottom:14px;}
+.num{width:24px;height:24px;border-radius:50%;background:var(--accent-dim);
+  border:1px solid rgba(240,160,61,0.4);color:var(--accent);font-size:13px;
+  display:flex;align-items:center;justify-content:center;flex:0 0 24px;}
+.mrow{display:flex;gap:14px;padding:12px;border:1px solid var(--line);border-radius:8px;
+  background:var(--raised);margin-bottom:10px;cursor:pointer;align-items:center;}
+.mrow:hover{border-color:var(--dim);}
+.mrow.sel{background:#2A2318;border-color:var(--accent);}
+.mrow.off{opacity:.5;}
+.mthumb{width:88px;height:66px;flex:0 0 88px;border:1px dashed #3A3E46;border-radius:4px;
+  display:flex;align-items:center;justify-content:center;font-size:11px;color:var(--muted);}
+.mtxt{min-width:0;}
+.mname{font-size:17px;font-weight:500;}
+.mrow.sel .mname{color:var(--accent);}
+.msub{font-size:12px;color:var(--dim);margin-top:5px;}
+.risk{font-size:12px;margin-left:auto;padding-left:10px;}
+.risk.low{color:var(--ok);} .risk.mid{color:#EF9F27;} .risk.high{color:var(--danger);}
+.taskrow{padding:12px 0;border-bottom:1px solid var(--line);}
+.taskrow .tt{font-size:15px;font-weight:500;}
+.taskrow .td{font-size:12px;color:var(--muted);margin-top:5px;}
+.wbar{height:5px;background:var(--line);border-radius:3px;overflow:hidden;margin-top:6px;}
+.wbar>i{display:block;height:100%;background:var(--accent);}
+.est{margin-top:auto;background:var(--sunken);border-radius:8px;padding:14px 16px;}
+.est .kv{padding:6px 0;}
+
+.empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:var(--muted);gap:12px;border:1px dashed var(--line);border-radius:8px;}
+.empty b{font-size:20px;color:var(--dim);font-weight:500;}
+.empty p{font-size:14px;}
+
+#toast{position:absolute;left:50%;bottom:140px;transform:translateX(-50%);
+  background:var(--raised);border:1px solid var(--accent);color:var(--text);
+  padding:14px 26px;border-radius:8px;font-size:16px;opacity:0;transition:opacity .15s;
+  pointer-events:none;z-index:20;}
+#toast.on{opacity:1;}
+kbd{background:var(--raised);border:1px solid var(--line);border-radius:4px;
+  padding:2px 6px;font-size:12px;font-family:inherit;color:var(--dim);}
+</style>
+</head>
+<body>
+<div id="stage">
+
+  <div id="base">
+    <div class="floor"></div>
+    <div class="blk" style="left:150px;top:640px;width:290px;height:130px">后勤区 · 仓库</div>
+    <div class="blk" style="left:150px;top:820px;width:290px;height:90px">物资商 / 医疗商</div>
+    <div class="blk" style="left:500px;top:600px;width:300px;height:130px">3D 打印</div>
+    <div class="blk" style="left:850px;top:540px;width:400px;height:220px">靶场</div>
+    <div class="blk" style="left:560px;top:790px;width:280px;height:90px">改枪台</div>
+    <div class="blk" style="left:1100px;top:800px;width:300px;height:90px">军火商</div>
+    <div class="blk" style="left:1330px;top:470px;width:330px;height:170px">指挥室</div>
+    <div class="blk" style="left:1330px;top:700px;width:330px;height:150px">实验室</div>
+    <div class="me"></div>
+    <div class="basehint">基地 · 按 <b style="color:#EBEDF2">Tab</b> 打开操控台，或点右上角「菜单」</div>
+    <button id="openbtn">菜单</button>
+  </div>
+
+  <div id="overlay">
+    <div id="panel">
+
+      <header>
+        <div class="prof">
+          <div class="ava">L7</div>
+          <div>
+            <div class="pn">本地玩家</div>
+            <div class="pl">Lv.7 · 3,240 / 4,000</div>
+          </div>
+          <div class="xbar"><i style="width:81%"></i></div>
+        </div>
+        <div class="hmid" id="hmid">营地 · <b>基地 Lv.3</b></div>
+        <div class="hright">
+          <div class="cur"><span>¥</span>48,200</div>
+          <button class="iconbtn" data-go="settings">设置</button>
+          <button class="iconbtn" id="closebtn">关闭 <kbd>Esc</kbd></button>
+        </div>
+      </header>
+
+      <main>
+        <!-- ===== 军械部（默认） ===== -->
+        <div class="view" data-v="arsenal">
+          <div class="zones">
+            <div class="zcol side">
+              <div class="zhead">改枪台 <span>AK-74</span></div>
+              <div class="gun">武器预览（未物品化）</div>
+              <div class="slot filled"><span>瞄具 · 红点</span><span>已装</span></div>
+              <div class="slot"><span>枪口</span><span>空</span></div>
+              <div class="slot"><span>握把</span><span>空</span></div>
+              <div class="slot"><span>弹匣</span><span>空</span></div>
+              <div class="slot"><span>枪托</span><span>空</span></div>
+              <button class="gbtn" data-tip="3D 打印台在隔壁，造完直接过来装">去 3D 打印台造配件</button>
+            </div>
+
+            <div class="zcol mid">
+              <div class="zhead">靶场 <span>同一场景 · 走进去就生效</span></div>
+              <div class="rangeview">靶道 / 无限弹药箱</div>
+              <div class="kv"><span>上次试射</span><b>12 发 · 命中 9</b></div>
+              <div class="kv"><span>平均伤害</span><b>34</b></div>
+              <div class="kv"><span>弹药</span><span style="color:var(--ok)">无限（练习弹，不动真子弹）</span></div>
+              <button class="sbtn" data-tip="走进去即可，不做黑屏加载">走进靶场</button>
+            </div>
+
+            <div class="zcol side">
+              <div class="zhead">军火商 <span>就在隔壁</span></div>
+              <div class="shoprow"><span>5.56 × 30</span><span class="p">¥120</span></div>
+              <div class="shoprow"><span>瞄具 · 红点</span><span class="p">¥2,400</span></div>
+              <div class="shoprow"><span>握把 · 垂直</span><span class="p">¥1,800</span></div>
+              <div class="shoprow"><span>枪口 · 补偿</span><span class="p">¥3,100</span></div>
+              <div class="shoprow"><span>弹匣 · 扩容</span><span class="p">¥4,200</span></div>
+              <button class="gbtn" data-go="logistics" data-tip="军火商是三个商人之一，另两个在后勤区">查看其它商人</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 后勤部 ===== -->
+        <div class="view on" data-v="logistics">
+          <div class="subtabs">
+            <div class="st on" data-sub="logistics:store">仓库 · 装备</div>
+            <div class="st" data-sub="logistics:trade">商人</div>
+          </div>
+          <div class="sub on" data-subview="logistics:store">
+            <div class="wh">
+              <div class="wcol role">
+                <div class="ctitle">角色 <span>占位</span></div>
+                <div style="height:150px;border:1px dashed var(--muted);border-radius:6px;
+                  display:flex;align-items:center;justify-content:center;color:var(--muted);
+                  font-size:13px;margin-bottom:14px">角色模型（未做）</div>
+                <div class="slotbox">主武器</div>
+                <div class="slotbox">副武器</div>
+                <div class="slotbox">近战</div>
+              </div>
+              <div class="wcol body">
+                <div class="ctitle">随身容器 <span>23 / 72 格</span></div>
+                <div style="font-size:12px;color:var(--muted);margin:2px 0 6px">背包 10×6</div>
+                <div class="grid" id="bagGrid"></div>
+                <div style="font-size:12px;color:var(--muted);margin:14px 0 6px">弹挂 4×2</div>
+                <div class="grid" id="rigGrid"></div>
+              </div>
+              <div class="wcol store">
+                <div class="ctitle">仓库 <span>42 条 · 20×15</span></div>
+                <div class="grid" id="stashGrid"></div>
+              </div>
+            </div>
+          </div>
+          <div class="sub" data-subview="logistics:trade">
+            <div class="trade">
+              <div class="mlist">
+                <div class="m on" data-m="0"><div class="mn">军火商</div><div class="ms">枪械 · 弹药 · 配件 · 射击场区</div></div>
+                <div class="m" data-m="1"><div class="mn">物资商</div><div class="ms">收购废料与电子件 · 后勤区</div></div>
+                <div class="m" data-m="2"><div class="mn">医疗商</div><div class="ms">绷带 · 急救包 · 医疗包 · 后勤区</div></div>
+              </div>
+              <div class="shelf">
+                <div class="ctitle" id="shelfTitle">军火商 <span>收货 6 件 · 收购价 ×0.6</span></div>
+                <div class="shoprow"><span>5.56 × 30</span><span class="p">¥120</span></div>
+                <div class="shoprow"><span>瞄具 · 红点</span><span class="p">¥2,400</span></div>
+                <div class="shoprow"><span>握把 · 垂直</span><span class="p">¥1,800</span></div>
+                <div class="shoprow"><span>枪口 · 补偿</span><span class="p">¥3,100</span></div>
+                <div class="shoprow"><span>弹匣 · 扩容</span><span class="p">¥4,200</span></div>
+                <div class="shoprow"><span>古董滑膛枪</span><span class="p">¥18,000</span></div>
+                <div style="margin-top:auto;display:flex;gap:12px">
+                  <button class="gbtn" style="flex:1" data-tip="选中物品后出售，收购价按品质档位">出售选中物品</button>
+                  <button class="gbtn" style="flex:1" data-tip="商人等级受基地等级限制">查看商人等级</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 指挥部 ===== -->
+        <div class="view" data-v="command">
+          <div class="subtabs">
+            <div class="st on" data-sub="command:state">基地状态</div>
+            <div class="st" data-sub="command:up">升级</div>
+            <div class="st" data-sub="command:npc">指挥室</div>
+            <div class="st" data-sub="command:board">委托板</div>
+          </div>
+          <div class="sub on" data-subview="command:state">
+            <div style="display:flex;align-items:flex-end;gap:22px;padding-bottom:20px;
+              border-bottom:1px solid var(--line)">
+              <div class="big">Lv.3</div>
+              <div style="padding-bottom:8px">
+                <div style="font-size:14px;color:var(--dim)">当前基地等级</div>
+                <div style="font-size:14px;color:var(--accent);margin-top:7px">
+                  下一级解锁：靶场 Lv.3、军火商 Lv.2</div>
+              </div>
+            </div>
+            <div class="facrow"><span>军火库</span><span class="lv">Lv.2 / 上限 3</span></div>
+            <div class="facrow"><span>军火商</span><span class="lv">Lv.1 / 上限 1</span></div>
+            <div class="facrow"><span>靶场</span><span class="lv">Lv.2 / 上限 2</span></div>
+            <div class="facrow"><span>仓库</span><span class="lv">Lv.3 / 上限 3</span></div>
+            <div class="facrow"><span>实验室</span><span class="lv">Lv.1 / 上限 1</span></div>
+          </div>
+          <div class="sub" data-subview="command:up">
+            <div class="upbox">
+              <div style="font-size:20px;font-weight:500;margin-bottom:18px">升级 军火库 → Lv.3</div>
+              <div class="cond"><span>玩家等级</span><span class="ok">Lv.7 ✓</span></div>
+              <div class="cond"><span>资金</span><span class="ok">¥12,000 ✓</span></div>
+              <div class="cond"><span>材料 · 处理器</span><span class="ok">1 / 1 ✓</span></div>
+              <div class="cond"><span>材料 · 主板</span><span class="bad">0 / 1 ✗</span></div>
+              <div class="blocked">还差 1 个主板。处理器与主板产自废弃工业区。</div>
+              <button class="upbtn" id="upbtn">条件不足，无法升级</button>
+              <div style="font-size:13px;color:var(--muted);margin-top:14px;line-height:1.7">
+                一次只显示一道挡路条件；满足后才提示下一道。
+              </div>
+            </div>
+          </div>
+          <div class="sub" data-subview="command:npc">
+            <div class="cmd">
+              <div class="tall">
+                <div class="ctitle">指挥官 · 好感度 <span>Lv.4</span></div>
+                <div class="stbar" style="margin-bottom:18px"><i style="width:62%"></i></div>
+                <div class="dialog">
+                  「这一带的感染源在往东扩散。你要是敢往研究所走一趟，我这儿有几样东西能借给你。」<br><br>
+                  好感度靠对话与完成他派的委托提升，和击杀、带回价值无关。
+                </div>
+              </div>
+              <div class="tall" style="max-width:520px">
+                <div class="ctitle">可以做的事</div>
+                <div class="choice" data-tip="推进一段对话，好感 +少量">继续交谈</div>
+                <div class="choice" data-tip="交付他需要的物资换好感">交付物资</div>
+                <div class="choice" data-tip="他的任务链和委托板是两套东西">查看他的任务（2）</div>
+                <div class="choice" data-tip="情报用于解锁新地图">索取情报</div>
+              </div>
+            </div>
+          </div>
+          <div class="sub" data-subview="command:board">
+            <div class="empty">
+              <b>委托板</b>
+              <p>每日刷新的短委托列表。原型未做内容。</p>
+              <p>它和指挥室的任务链是两套：这个会刷新，那个不会。</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 出击流程（点「开始行动」后出现） ===== -->
+        <div class="view" data-v="sortie">
+          <div class="sortiehead">
+            <button class="backbtn" id="backbtn">返回</button>
+            <h1>出击准备</h1>
+            <div class="sm">确认区域、装备与任务，然后出发</div>
+          </div>
+          <div class="steps">
+            <div class="stepcol a">
+              <div class="steptitle"><span class="num">1</span>选择区域</div>
+              <div class="mrow sel">
+                <div class="mthumb">缩略图</div>
+                <div class="mtxt">
+                  <div class="mname">灰盒测试场</div>
+                  <div class="msub">唯一可玩区域 · 撤离链路已验证</div>
+                </div>
+                <span class="risk low">风险 低</span>
+              </div>
+              <div class="mrow off">
+                <div class="mthumb">缩略图</div>
+                <div class="mtxt">
+                  <div class="mname">废弃工业区</div>
+                  <div class="msub">处理器 / 主板产地</div>
+                </div>
+                <span class="risk mid">风险 中</span>
+              </div>
+              <div class="mrow off">
+                <div class="mthumb">缩略图</div>
+                <div class="mtxt">
+                  <div class="mname">感染研究所</div>
+                  <div class="msub">精英与首领出没</div>
+                </div>
+                <span class="risk high">风险 高</span>
+              </div>
+            </div>
+
+            <div class="stepcol b">
+              <div class="steptitle"><span class="num">2</span>携带装备</div>
+              <div class="slotbox">主武器 · AK-74（槽位未开放）</div>
+              <div class="slotbox">副武器 · 未装备</div>
+              <div class="kv"><span>背包 10×6</span><b>18 / 60</b></div>
+              <div class="kv"><span>弹挂 4×2</span><b>5 / 8</b></div>
+              <div class="kv"><span>安全箱 2×2</span><b>2 / 4</b></div>
+              <div class="kv"><span>负重</span><b>24.6 / 40 kg</b></div>
+              <div class="wbar"><i style="width:61.5%"></i></div>
+              <button class="gbtn" data-go="logistics" data-tip="直接跳到仓库调整，回来还在出击准备">去仓库调整装备</button>
+            </div>
+
+            <div class="stepcol c">
+              <div class="steptitle"><span class="num">3</span>任务与委托</div>
+              <div class="taskrow"><div class="tt">主线 · 打通第一条撤离线</div><div class="td">灰盒测试场 · 完成后解锁工业区情报</div></div>
+              <div class="taskrow"><div class="tt">主线 · 交回 3 个电子件</div><div class="td">当前 1 / 3 · 交给指挥官</div></div>
+              <div class="taskrow"><div class="tt">委托 · 清剿两片区域</div><div class="td">今日刷新 · 奖励材料 ×1</div></div>
+              <div class="est">
+                <div class="kv"><span>预计收益</span><b>15 – 25 单位</b></div>
+                <div class="kv"><span>撤离才结算</span><span style="color:var(--ok)">经验 · 战果 · 材料</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== 占位 ===== -->
+        <div class="view" data-v="todo">
+          <div class="empty">
+            <b id="todoTitle">设置</b>
+            <p>原型只做了军械部、后勤部、指挥部，以及出击流程。</p>
+            <p style="color:#5A6068">设置页已有实现，这里不再重画。</p>
+          </div>
+        </div>
+      </main>
+
+      <footer class="depts">
+        <div class="dept" data-d="arsenal"><div class="dn">军械部</div><div class="ds">改枪 · 打印 · 靶场 · 军火商</div></div>
+        <div class="dept on" data-d="logistics"><div class="dn">后勤部</div><div class="ds">仓库 · 物资商 · 医疗商</div></div>
+        <div class="dept" data-d="command"><div class="dn">指挥部</div><div class="ds">基地 · 升级 · 指挥室 · 委托</div></div>
+        <button class="go" id="startbtn">开始行动<small id="startSub">进入出击准备</small></button>
+      </footer>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+</div>
+
+<script>
+const stage = document.getElementById('stage');
+const overlay = document.getElementById('overlay');
+const toast = document.getElementById('toast');
+const hmid = document.getElementById('hmid');
+const goBtn = document.getElementById('startbtn');
+let timer = null;
+let inSortie = false;
+
+function fit(){
+  const s = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  stage.style.transform = 'translate(-50%, -50%) scale(' + s + ')';
+}
+window.addEventListener('resize', fit); fit();
+
+function showToast(msg){
+  toast.textContent = msg; toast.classList.add('on');
+  clearTimeout(timer);
+  timer = setTimeout(() => toast.classList.remove('on'), 1900);
+}
+
+const TITLES = { settings:'设置' };
+const VIEWS = { arsenal:1, logistics:1, command:1, sortie:1 };
+
+function syncGo(sortie){
+  inSortie = sortie;
+  if (sortie){
+    goBtn.innerHTML = '确认出发<small>灰盒测试场 · 风险 低</small>';
+    hmid.innerHTML = '营地 · <b>出击准备</b>';
+  } else {
+    goBtn.innerHTML = '开始行动<small>进入出击准备</small>';
+    hmid.innerHTML = '营地 · <b>基地 Lv.3</b>';
+  }
+}
+
+function showView(key){
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('on'));
+  if (VIEWS[key]) {
+    document.querySelector('.view[data-v="' + key + '"]').classList.add('on');
+  } else {
+    document.getElementById('todoTitle').textContent = TITLES[key] || key;
+    document.querySelector('.view[data-v="todo"]').classList.add('on');
+  }
+  document.querySelectorAll('.dept').forEach(d => d.classList.toggle('on', d.dataset.d === key));
+  syncGo(key === 'sortie');
+}
+
+function showSub(pair){
+  const [viewKey, subKey] = pair.split(':');
+  showView(viewKey);
+  const view = document.querySelector('.view[data-v="' + viewKey + '"]');
+  view.querySelectorAll('.st').forEach(s => s.classList.toggle('on', s.dataset.sub === pair));
+  view.querySelectorAll('.sub').forEach(s => s.classList.toggle('on', s.dataset.subview === pair));
+}
+
+document.querySelectorAll('.dept').forEach(d => {
+  d.addEventListener('click', () => {
+    const key = d.dataset.d;
+    const first = document.querySelector('.view[data-v="' + key + '"] .st');
+    if (first) showSub(first.dataset.sub); else showView(key);
+  });
+});
+
+document.querySelectorAll('.st').forEach(t => {
+  t.addEventListener('click', () => showSub(t.dataset.sub));
+});
+
+document.querySelectorAll('[data-go]').forEach(el => {
+  el.addEventListener('click', () => {
+    const target = el.dataset.go;
+    const first = document.querySelector('.view[data-v="' + target + '"] .st');
+    if (first) showSub(first.dataset.sub); else showView(target);
+    if (el.dataset.tip) showToast(el.dataset.tip);
+  });
+});
+
+document.querySelectorAll('[data-tip]').forEach(el => {
+  el.addEventListener('click', () => showToast(el.dataset.tip));
+});
+
+document.querySelectorAll('.mrow').forEach(row => {
+  row.addEventListener('click', () => {
+    if (row.classList.contains('off')) { showToast('这片区域还在做'); return; }
+    document.querySelectorAll('.mrow').forEach(r => r.classList.remove('sel'));
+    row.classList.add('sel');
+  });
+});
+
+goBtn.addEventListener('click', () => {
+  if (inSortie){
+    showToast('出发：灰盒测试场 —— 撤离成功才结算经验与战果');
+  } else {
+    showView('sortie');
+    showToast('进入出击准备：选区域 → 带装备 → 看任务');
+  }
+});
+
+document.getElementById('backbtn').addEventListener('click', () => showView('logistics'));
+
+document.querySelectorAll('.m').forEach(m => {
+  m.addEventListener('click', () => {
+    document.querySelectorAll('.m').forEach(x => x.classList.remove('on'));
+    m.classList.add('on');
+    const names = ['军火商','物资商','医疗商'];
+    const i = +m.dataset.m;
+    document.getElementById('shelfTitle').innerHTML =
+      names[i] + ' <span>收货 6 件 · 收购价 ×0.6</span>';
+  });
+});
+
+document.getElementById('upbtn').addEventListener('click',
+  () => showToast('缺 1 个主板 · 主板产自废弃工业区'));
+document.getElementById('closebtn').addEventListener('click', () => overlay.classList.add('hidden'));
+document.getElementById('openbtn').addEventListener('click', () => overlay.classList.remove('hidden'));
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (inSortie) showView('logistics');
+    else overlay.classList.add('hidden');
+  }
+  if (e.key === 'Tab') { e.preventDefault(); overlay.classList.toggle('hidden'); }
+});
+
+function fillGrid(id, cols, rows, cellSize, painted){
+  const g = document.getElementById(id);
+  g.style.gridTemplateColumns = 'repeat(' + cols + ', ' + cellSize + 'px)';
+  g.style.gridAutoRows = cellSize + 'px';
+  let html = '';
+  for (let i = 0; i < cols * rows; i++){
+    const q = painted[i];
+    html += '<div class="cell' + (q ? ' f' + q : '') + '"></div>';
+  }
+  g.innerHTML = html;
+}
+fillGrid('bagGrid', 10, 6, 34, {0:2,1:2,4:1,12:4,13:4,25:3,26:3,27:3,40:2});
+fillGrid('rigGrid', 4, 2, 34, {0:2,1:2,2:5,5:1});
+fillGrid('stashGrid', 20, 15, 26, {
+  0:3,1:3,2:4,5:5,6:5,9:1,40:2,41:2,42:2,60:4,61:4,90:5,120:3,121:3,150:1,180:2,
+  200:4,201:4,230:5,260:1,261:1
+});
+</script>
+</body>
+</html>

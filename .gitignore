@@ -20,3 +20,12 @@ Desktop.ini
 
 # 字体原件暂存目录（真正的字体在 ZombieExtraction/Assets/Art/Fonts/，不在这里重复占 21MB）
 Fonts/
+
+# ── 原始素材包 / 音效库（体积大、有独立授权，不属于文档与工具）──
+# 目前约 3.3 GB：BOOM 枪械音效库 721 MB、bl_tactical_guns_ds 2.5 GB、杂项 75 MB
+/BOOM Library Gun Handling (WAV)/
+/bl_tactical_guns_ds/
+/新建文件夹/
+
+# 一次性日志（LogCopyTool 用完即弃）
+/Tools/last_log.txt

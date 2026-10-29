@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>背包界面 · 三角洲式布局示例</title>
+<style>
+  :root{
+    --bg:#0b0c0d;
+    --bg-deep:#070809;
+    --panel:#141517;
+    --panel-2:#181a1c;
+    --line:#2b2d31;
+    --line-soft:#222429;
+    --text:#d6d8da;
+    --text-dim:#8b9095;
+    --text-mute:#5d6267;
+    --accent:#e0a04a;
+    --danger:#8a2429;
+    --danger-2:#5c171a;
+    --danger-text:#eab0b2;
+
+    --q-white:#555c62;
+    --q-green:#3d5c55;
+    --q-blue:#395269;
+    --q-purple:#4a4562;
+    --q-gold:#655141;
+    --q-red:#6c3c40;
+
+    --cell:3.75em;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  html,body{height:100%;overflow:hidden}
+
+  body{
+    background:#050506;
+    display:flex;align-items:center;justify-content:center;
+    font-family:"Microsoft YaHei","PingFang SC","Segoe UI",system-ui,sans-serif;
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+  }
+
+  /* 整个界面按 1920×1080 等比缩放：1em = 16px@1080p */
+  #screen{
+    width:min(100vw,177.78vh);
+    height:min(56.25vw,100vh);
+    font-size:min(1.4815vh,0.8333vw);
+    background:
+      radial-gradient(120% 90% at 18% 30%, rgba(60,52,38,.20), transparent 60%),
+      radial-gradient(90% 80% at 82% 10%, rgba(30,40,52,.16), transparent 55%),
+      var(--bg);
+    position:relative;
+    display:flex;flex-direction:column;
+    overflow:hidden;
+  }
+
+  /* ── 顶栏 ───────────────────────────────────────────── */
+  .topbar{
+    height:3.375em;flex:0 0 auto;
+    display:flex;align-items:center;
+    padding:0 1.25em;
+    border-bottom:1px solid var(--line-soft);
+    background:linear-gradient(180deg,rgba(255,255,255,.03),transparent);
+    position:relative;
+  }
+  .brand{font-size:1.15em;letter-spacing:.02em}
+  .brand em{font-style:normal;color:var(--text-mute);font-size:.62em;letter-spacing:.12em;margin-left:.4em}
+
+  .tabs{
+    position:absolute;left:50%;transform:translateX(-50%);
+    display:flex;align-items:center;gap:.35em;
+  }
+  .tab{
+    appearance:none;border:0;background:transparent;
+    color:var(--text-dim);font:inherit;font-size:.9em;
+    padding:.45em .95em;cursor:pointer;border-radius:.2em;
+    transition:color .15s,background .15s;
+  }
+  .tab:hover{color:var(--text);background:rgba(255,255,255,.04)}
+  .tab.active{
+    color:var(--accent);
+    background:linear-gradient(180deg,rgba(224,160,74,.14),rgba(224,160,74,.04));
+    box-shadow:inset 0 -2px 0 var(--accent);
+  }
+  .kbd{
+    display:inline-flex;align-items:center;justify-content:center;
+    min-width:1.5em;height:1.5em;padding:0 .35em;
+    font-size:.7em;color:var(--text-dim);
+    border:1px solid var(--line);border-radius:.2em;
+    background:rgba(255,255,255,.03);
+  }
+  .close{
+    margin-left:auto;appearance:none;cursor:pointer;
+    font:inherit;font-size:.8em;color:var(--text);
+    background:rgba(255,255,255,.06);border:1px solid var(--line);
+    padding:.5em 1em;border-radius:.2em;
+  }
+  .close:hover{background:rgba(255,255,255,.1)}
+
+  /* ── 主区：不是三等分，是「立绘 / 装备条 / 卡片流 / 浮层区」  ── */
+  .stage{
+    flex:1 1 auto;min-height:0;
+    display:grid;
+    grid-template-columns:40em 39.75em minmax(0,1fr);
+    gap:1.4em;
+    padding:1.1em 1.25em .6em;
+    align-items:stretch;
+  }
+  .float-area{align-self:start}
+
+  /* 角色区：立绘 + **右侧一条装备列**（用户 2026-10-25：头盔/防护服在上，近战/特殊道具在下） */
+  .char{
+    position:relative;
+    height:100%;min-height:0;
+    display:flex;flex-direction:column;
+    min-width:0;
+  }
+
+  .char-body{
+    position:relative;
+    flex:1 1 auto;min-height:0;
+    display:grid;
+    grid-template-columns:minmax(0,1fr) 6.5em;
+    gap:.7em;
+  }
+
+  .gear-col{display:flex;flex-direction:column;gap:.5em;min-width:0}
+
+  /* 角色立绘：占满整列高度（头顶到脚），不再被任何东西挤 */
+  .portrait{
+    position:relative;
+    min-height:0;min-width:0;
+    border:1px solid var(--line-soft);
+    background:
+      radial-gradient(70% 55% at 50% 40%, rgba(96,84,62,.22), transparent 70%),
+      linear-gradient(180deg,#141518,#0a0b0c);
+    overflow:hidden;
+  }
+  .portrait::after{
+    content:"";position:absolute;inset:0;
+    background:linear-gradient(180deg,transparent 70%,rgba(0,0,0,.5));
+    pointer-events:none;
+  }
+
+  /* 人形剪影：按立绘框的百分比画，框变高变窄人形自动跟着变 */
+  .fig{
+    position:absolute;left:50%;bottom:0;transform:translateX(-50%);
+    width:100%;height:100%;opacity:.55;
+  }
+  .fig > div{position:absolute}
+  .fig .head{
+    left:50%;transform:translateX(-50%);top:3%;
+    width:22%;height:11%;border-radius:50% 50% 46% 46%;background:#2b2b28;
+  }
+  .fig .neck{
+    left:50%;transform:translateX(-50%);top:13.4%;
+    width:9%;height:3%;background:#262623;
+  }
+  .fig .torso{
+    left:50%;transform:translateX(-50%);top:16%;
+    width:58%;height:30%;border-radius:1.2em 1.2em .6em .6em;background:#33332e;
+  }
+  .fig .vest{
+    left:50%;transform:translateX(-50%);top:20%;
+    width:52%;height:21%;border-radius:.5em;background:#3f3d34;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.45);
+  }
+  .fig .arm-l,.fig .arm-r{top:18%;width:12.5%;height:32%;border-radius:1em;background:#2d2d29}
+  .fig .arm-l{left:2%}
+  .fig .arm-r{right:2%}
+  .fig .leg-l,.fig .leg-r{bottom:0;width:20%;height:53%;border-radius:.8em .8em .3em .3em;background:#29292a}
+  .fig .leg-l{left:23%}
+  .fig .leg-r{right:23%}
+
+  /* 重量条：浮在立绘左下角（让立绘能占到列底） */
+  .weight{
+    position:absolute;left:.7em;bottom:.55em;right:18.6em;z-index:2;
+    display:flex;align-items:center;gap:.6em;
+    font-size:.78em;color:var(--text-dim);
+    text-shadow:0 1px 3px rgba(0,0,0,.9);
+    pointer-events:none;
+  }
+  .weight .bar{flex:1;height:.35em;background:rgba(255,255,255,.10);border-radius:1em;overflow:hidden}
+  .weight .bar i{display:block;height:100%;width:15%;background:var(--accent);border-radius:1em}
+
+  /* 武器槽：**浮在立绘右下方**，盖住腿部（用户 2026-10-25 定稿版）
+     · 宽度 17.5em（280），只有角色列的 60%，不横贯
+     · 靠右贴装备条那一侧
+     · 绝对定位：立绘仍然从头顶贯到脚，武器槽压在上面 */
+  .weapons{
+    position:absolute;right:7.2em;bottom:2.3em;z-index:3;
+    width:17.5em;
+    display:flex;flex-direction:column;gap:.4em;
+    filter:drop-shadow(0 .35em .8em rgba(0,0,0,.55));
+  }
+  .wslot{
+    position:relative;height:4.6em;
+    border:1px solid var(--line);
+    background:linear-gradient(100deg,rgba(22,23,25,.97) 0%,rgba(17,18,20,.97) 60%,rgba(14,15,17,.97) 100%);
+    border-radius:.15em;cursor:pointer;
+    display:flex;align-items:center;gap:.5em;
+    padding:0 .55em;
+    transition:border-color .15s,background .15s;
+    overflow:hidden;
+    backdrop-filter:blur(2px);
+  }
+  .wslot:hover{border-color:rgba(224,160,74,.5);background:linear-gradient(100deg,#202224,#171819 60%,#111213)}
+  .wslot.active{border-color:var(--accent);background:linear-gradient(100deg,rgba(46,36,24,.97),rgba(28,23,18,.97) 65%,rgba(18,16,14,.97))}
+  .wslot.empty{border-style:dashed;opacity:.82}
+  .wslot.empty:hover{border-color:var(--line);background:linear-gradient(100deg,#191a1c,#131416)}
+
+  .wnum{
+    flex:0 0 auto;width:1.6em;height:1.6em;
+    display:flex;align-items:center;justify-content:center;
+    font-size:.68em;color:var(--text-dim);
+    border:1px solid var(--line);border-radius:.15em;
+    background:rgba(255,255,255,.03);
+  }
+  .wslot.active .wnum{color:#0c0d0e;background:var(--accent);border-color:var(--accent)}
+
+  .wshape{position:relative;flex:1 1 auto;height:2.4em;min-width:4em;opacity:.9}
+  .wshape i{position:absolute;background:#3b3c38;border-radius:.08em}
+  .wshape .barrel{left:0;top:38%;width:56%;height:12%}
+  .wshape .body{left:16%;top:31%;width:36%;height:24%;background:#46473f}
+  .wshape .mag{left:33%;top:52%;width:7%;height:34%;background:#34352f}
+  .wshape .grip{left:44%;top:52%;width:6%;height:30%;background:#33342e}
+  .wshape .stock{left:47%;top:34%;width:17%;height:18%;background:#3a3b35}
+  .wslot.empty .wshape{opacity:.16}
+
+  .wmeta{flex:0 1 auto;min-width:0;display:flex;flex-direction:column;align-items:flex-start;gap:.05em}
+  .wmeta .nm{font-size:.66em;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:5.2em}
+  .wmeta .cal{font-size:.55em;color:var(--text-mute);letter-spacing:.03em}
+  .wammo{
+    flex:0 0 auto;min-width:3.4em;text-align:right;
+    font-size:.92em;color:var(--text);font-variant-numeric:tabular-nums;letter-spacing:.01em;
+  }
+  .wslot.empty .wammo{color:var(--text-mute);font-size:.7em}
+
+  /* 装备条（窄竖列，不是"一列"，就是一条） */
+  .gear{display:flex;flex-direction:column;gap:.45em}
+  .slot{
+    position:relative;height:6.5em;
+    border:1px solid var(--line);
+    background:linear-gradient(160deg,var(--panel-2),#101113);
+    border-radius:.15em;cursor:pointer;
+    transition:border-color .15s,background .15s;
+  }
+  .slot:hover{border-color:rgba(224,160,74,.45);background:linear-gradient(160deg,#1d1f21,#131416)}
+  .slot .name{position:absolute;left:.4em;top:.28em;font-size:.66em;color:var(--text-mute);letter-spacing:.02em}
+  .slot .val{position:absolute;right:.4em;bottom:.25em;font-size:.64em;color:var(--text-dim);font-variant-numeric:tabular-nums}
+  .slot .ico{
+    position:absolute;left:50%;top:52%;transform:translate(-50%,-50%);
+    width:2.6em;height:1.9em;border-radius:.15em;
+    background:linear-gradient(150deg,#3a3b38,#262725);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.05);
+  }
+  .slot.empty .ico{background:rgba(255,255,255,.035);box-shadow:none}
+  .slot.empty .val{color:var(--text-mute)}
+
+  /* 中列：一叠卡片，各自定高；**超出就滚动**（用户 2026-10-25 要求） */
+  .flow{
+    display:flex;flex-direction:column;gap:.8em;min-width:0;
+    max-height:100%;overflow-y:auto;overflow-x:hidden;
+    padding-right:.55em;
+    scrollbar-width:thin;
+    scrollbar-color:#3d4045 transparent;
+    overscroll-behavior:contain;
+  }
+  .flow::-webkit-scrollbar{width:.42em}
+  .flow::-webkit-scrollbar-track{background:rgba(255,255,255,.028);border-radius:1em}
+  .flow::-webkit-scrollbar-thumb{background:#3d4045;border-radius:1em}
+  .flow::-webkit-scrollbar-thumb:hover{background:#565b61}
+
+  /* 顶部/底部渐隐：提示"上面/下面还有内容" */
+  .flow-fade{position:relative;min-height:0;display:flex}
+  .flow-fade::after{
+    content:"";position:absolute;left:0;right:.55em;bottom:0;height:3.2em;
+    background:linear-gradient(180deg,transparent,rgba(11,12,13,.85));
+    pointer-events:none;
+  }
+
+  .card{
+    border:1px solid var(--line-soft);
+    background:linear-gradient(180deg,rgba(255,255,255,.022),rgba(255,255,255,0));
+    border-radius:.2em;
+  }
+  .card > header{
+    height:2.05em;display:flex;align-items:center;gap:.5em;
+    padding:0 .7em;
+    font-size:.8em;color:var(--text-dim);
+    border-bottom:1px solid var(--line-soft);
+    background:linear-gradient(180deg,rgba(255,255,255,.03),transparent);
+  }
+  .card > header .cnt{margin-left:auto;color:var(--text-mute);font-variant-numeric:tabular-nums}
+  .card > header .money{color:var(--accent);font-variant-numeric:tabular-nums;letter-spacing:.02em}
+  .card > header .dot{width:.42em;height:.42em;border-radius:50%;background:var(--accent);box-shadow:0 0 .5em rgba(224,160,74,.7)}
+
+  .grid{display:grid;gap:2px;padding:.45em;justify-content:start}
+  .grid.plain{grid-template-columns:repeat(var(--cols),var(--cell))}
+  .gcell{
+    width:var(--cell);height:var(--cell);
+    background:rgba(255,255,255,.028);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.045);
+    border-radius:.1em;
+  }
+
+  /* 物品 */
+  .item{
+    position:relative;border-radius:.12em;cursor:pointer;
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);
+    display:flex;flex-direction:column;justify-content:flex-end;
+    padding:.25em .3em;
+    transition:transform .12s,filter .12s;
+    overflow:hidden;
+  }
+  .item:hover{transform:translateY(-1px);filter:brightness(1.18);z-index:5}
+  .item .nm{font-size:.55em;line-height:1.15;color:rgba(255,255,255,.88);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .item .qt{position:absolute;right:.22em;bottom:.16em;font-size:.55em;color:rgba(255,255,255,.55);font-variant-numeric:tabular-nums}
+  .item .glow{position:absolute;inset:0;box-shadow:inset 0 0 1.6em rgba(255,255,255,.06);pointer-events:none}
+
+  .q-white{background:linear-gradient(160deg,#5c636a,#454b51)}
+  .q-green{background:linear-gradient(160deg,#42635b,#2f4a44)}
+  .q-blue{background:linear-gradient(160deg,#3d5871,#2b3f53)}
+  .q-purple{background:linear-gradient(160deg,#4f4a69,#39354d)}
+  .q-gold{background:linear-gradient(160deg,#6b5745,#4e4033)}
+  .q-red{background:linear-gradient(160deg,#734144,#553033)}
+
+  /* 右侧：搜索浮层 —— 不在任何列里，靠右悬着，上下留白 */
+  .float-area{
+    justify-self:end;
+    padding-top:1.9em;
+    min-width:0;
+  }
+  .search{
+    width:25.5em;
+    border:1px solid var(--line);
+    background:var(--bg-deep);
+    box-shadow:0 1.2em 2.5em rgba(0,0,0,.55);
+    border-radius:.15em;
+    overflow:hidden;
+  }
+  .search > header{
+    height:1.9em;display:flex;align-items:center;gap:.5em;
+    padding:0 .65em;font-size:.78em;color:var(--danger-text);
+    background:linear-gradient(180deg,var(--danger),var(--danger-2));
+    letter-spacing:.03em;
+  }
+  .search > header .pulse{
+    width:.42em;height:.42em;border-radius:50%;background:#ffd7d8;
+    animation:pulse 1.4s ease-in-out infinite;
+  }
+  @keyframes pulse{
+    0%,100%{opacity:.35;box-shadow:0 0 0 0 rgba(255,215,216,.5)}
+    50%{opacity:1;box-shadow:0 0 0 .35em rgba(255,215,216,0)}
+  }
+
+  .search .box{
+    margin:.8em .8em .5em;
+    height:2.6em;border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center;
+    background:rgba(255,255,255,.02);
+  }
+  /* 放大镜（纯 CSS） */
+  .loupe{position:relative;width:1.05em;height:1.05em;border:1.5px solid rgba(255,255,255,.7);border-radius:50%}
+  .loupe::after{
+    content:"";position:absolute;right:-.42em;bottom:-.42em;
+    width:.62em;height:1.5px;background:rgba(255,255,255,.7);
+    transform:rotate(45deg);transform-origin:left center;
+  }
+
+  .search .field{
+    margin:0 .8em .8em;
+    display:grid;grid-template-columns:repeat(4,1fr);gap:2px;
+  }
+  .fcell{
+    aspect-ratio:1;
+    border:1px dashed rgba(255,255,255,.10);
+    background-image:repeating-linear-gradient(45deg,rgba(255,255,255,.035) 0 2px,transparent 2px 9px);
+  }
+  .fcell.found{
+    border-style:solid;border-color:rgba(224,160,74,.35);
+    background:linear-gradient(160deg,#4a3f2f,#2f2820);
+    background-image:none;
+  }
+
+  .float-hint{
+    margin-top:.7em;width:25.5em;
+    font-size:.68em;color:var(--text-mute);line-height:1.7;
+    border-left:2px solid var(--line);
+    padding-left:.7em;
+  }
+
+  /* ── 底栏 ───────────────────────────────────────────── */
+  .bottombar{
+    flex:0 0 auto;height:5.4em;
+    display:flex;align-items:center;gap:1.4em;
+    padding:0 1.25em;
+    border-top:1px solid var(--line-soft);
+    background:linear-gradient(180deg,rgba(255,255,255,.015),rgba(0,0,0,.25));
+  }
+  .vitals{display:flex;flex-direction:column;gap:.35em;min-width:14em}
+  .vrow{display:flex;align-items:center;gap:.5em;font-size:.72em;color:var(--text-dim)}
+  .vrow .bar{width:11em;height:.45em;background:rgba(255,255,255,.07);border-radius:1em;overflow:hidden}
+  .vrow .bar i{display:block;height:100%;border-radius:1em}
+  .hp i{width:80%;background:linear-gradient(90deg,#b5434a,#d1615f)}
+  .st i{width:62%;background:linear-gradient(90deg,#4a6f7d,#5c8b9b)}
+
+  .quick{display:flex;align-items:center;gap:.4em}
+  .quick .lbl{font-size:.7em;color:var(--text-mute);margin-right:.3em}
+  .qslot{
+    position:relative;width:2.9em;height:2.9em;
+    border:1px solid var(--line);background:rgba(255,255,255,.025);
+    display:flex;align-items:center;justify-content:center;
+  }
+  .qslot .key{
+    position:absolute;left:.12em;top:.05em;font-size:.55em;color:var(--text-mute);
+  }
+  .qslot .it{width:1.7em;height:1.7em;border-radius:.1em}
+
+  .hints{margin-left:auto;display:flex;align-items:center;gap:.9em;font-size:.7em;color:var(--text-mute)}
+  .hints .h{display:flex;align-items:center;gap:.3em}
+  .hints .hb{
+    min-width:1.4em;height:1.4em;padding:0 .3em;
+    display:inline-flex;align-items:center;justify-content:center;
+    border:1px solid var(--line);border-radius:.18em;color:var(--text-dim);
+    background:rgba(255,255,255,.03);font-size:.92em;
+  }
+
+  /* 调试开关（只是给你对比用，正式界面不会有） */
+  #devbar{
+    position:fixed;right:14px;bottom:14px;z-index:98;
+    display:flex;gap:6px;
+    font:12px/1 "Microsoft YaHei",system-ui,sans-serif;
+  }
+  #devbar button{
+    appearance:none;cursor:pointer;font:inherit;
+    padding:7px 11px;border-radius:5px;
+    color:#c9ccd0;background:rgba(20,21,23,.94);
+    border:1px solid #33363a;
+  }
+  #devbar button:hover{background:rgba(32,34,37,.96);color:#fff}
+  #devbar button[aria-pressed="true"]{
+    color:#0c0d0e;background:#e0a04a;border-color:#e0a04a;
+  }
+
+  /* 对比用：显示三列底板 */
+  #screen.show-cols .char,
+  #screen.show-cols .gear,
+  #screen.show-cols .flow{
+    background:rgba(255,255,255,.022);
+    box-shadow:inset 0 0 0 1px rgba(255,255,255,.035);
+    padding:.5em;
+  }
+
+  /* 收起容器：右侧整块留白（三角洲就是这么空着的） */
+  #screen.no-search .float-area{visibility:hidden}
+
+  /* 悬停提示 */
+  #tip{
+    position:fixed;pointer-events:none;opacity:0;
+    transform:translate(14px,14px);
+    background:rgba(12,13,14,.97);
+    border:1px solid var(--line);
+    padding:.55em .75em;font-size:13px;line-height:1.5;
+    box-shadow:0 8px 24px rgba(0,0,0,.6);
+    transition:opacity .12s;white-space:nowrap;z-index:99;
+  }
+  #tip b{display:block;color:var(--text);font-weight:500;margin-bottom:.15em}
+  #tip span{color:var(--accent);font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div id="screen">
+
+  <header class="topbar">
+    <div class="brand">背包 <em>/ INVENTORY</em></div>
+    <nav class="tabs">
+      <span class="kbd">Q</span>
+      <button class="tab active">背包</button>
+      <button class="tab">任务</button>
+      <button class="tab">地图</button>
+      <button class="tab">设置</button>
+      <span class="kbd">E</span>
+    </nav>
+    <button class="close">关闭 Tab</button>
+  </header>
+
+  <main class="stage">
+
+    <!-- ① 角色区：左槽列 + 立绘 + 右槽列（装备槽环在人物两侧，用户 2026-10-25 定稿）
+         武器条浮在立绘右下，重量条浮在左下 —— 立绘因此能从头顶贯到脚 -->
+    <section class="char">
+      <div class="char-body">
+
+      <div class="portrait">
+        <div class="fig">
+          <div class="arm-l"></div><div class="arm-r"></div>
+          <div class="leg-l"></div><div class="leg-r"></div>
+          <div class="head"></div><div class="neck"></div>
+          <div class="torso"></div><div class="vest"></div>
+        </div>
+      </div>
+
+        <!-- 右侧一列：上面头盔 / 防护服，下面近战 / 特殊道具 -->
+        <div class="gear-col">
+          <div class="slot"><span class="name">头盔</span><span class="ico"></span><span class="val">12/120</span></div>
+          <div class="slot"><span class="name">防护服</span><span class="ico"></span><span class="val">9/90</span></div>
+          <div class="slot empty"><span class="name">近战</span><span class="val">空</span></div>
+          <div class="slot empty"><span class="name">特殊道具</span><span class="val">信号枪</span></div>
+        </div>
+
+      </div>
+
+      <!-- 重量条：浮在立绘左下角 -->
+      <div class="weight">
+        <span>9.4 / 61 kg</span>
+        <span class="bar"><i></i></span>
+      </div>
+
+      <!-- 武器条：浮在立绘右下方，盖住腿部（立绘在底下贯满整列） -->
+      <div class="weapons">
+        <div class="wslot active">
+          <span class="wnum">1</span>
+          <span class="wshape"><i class="barrel"></i><i class="body"></i><i class="mag"></i><i class="grip"></i><i class="stock"></i></span>
+          <span class="wmeta"><span class="nm">AR-102</span><span class="cal">5.56×45</span></span>
+          <span class="wammo">30 / 90</span>
+        </div>
+
+        <div class="wslot">
+          <span class="wnum">2</span>
+          <span class="wshape"><i class="barrel"></i><i class="body"></i><i class="mag"></i><i class="grip"></i><i class="stock"></i></span>
+          <span class="wmeta"><span class="nm">DMR-7</span><span class="cal">7.62×51</span></span>
+          <span class="wammo">10 / 30</span>
+        </div>
+
+        <div class="wslot empty">
+          <span class="wnum">3</span>
+          <span class="wshape"><i class="barrel"></i><i class="body"></i><i class="mag"></i><i class="grip"></i><i class="stock"></i></span>
+          <span class="wmeta"><span class="nm">战术重武器</span><span class="cal">—</span></span>
+          <span class="wammo">未装备</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ③ 中列：一叠卡片，各自定高；超出可滚动 -->
+    <div class="flow-fade">
+    <section class="flow">
+
+      <div class="card">
+        <header>弹挂 <span class="cnt">4 / 8</span></header>
+        <div class="grid plain" style="--cols:4" id="rigGrid"></div>
+      </div>
+
+      <div class="card">
+        <header>口袋 <span class="cnt">2 / 5</span></header>
+        <div class="grid plain" style="--cols:5" id="pocketGrid"></div>
+      </div>
+
+      <div class="card">
+        <header>背包 <span class="cnt">6 / 60</span></header>
+        <div class="grid plain" style="--cols:10" id="bagGrid"></div>
+      </div>
+
+      <div class="card">
+        <header>安全箱 <span class="cnt">2 / 4</span></header>
+        <div class="grid plain" style="--cols:2" id="safeGrid"></div>
+      </div>
+
+    </section>
+    </div>
+
+    <!-- ④ 右侧：搜索浮层（独立卡片，靠右悬着） -->
+    <div class="float-area">
+      <div class="search">
+        <header><span class="pulse"></span>正在搜索物资</header>
+        <div class="box"><span class="loupe"></span></div>
+        <div class="field" id="field"></div>
+      </div>
+      <div class="float-hint">
+        容器不在任何一列里 —— 它是一张浮层卡片，<br>
+        靠右悬浮、上下自动留白。收起来时这块就是空的。
+      </div>
+    </div>
+
+  </main>
+
+  <footer class="bottombar">
+    <div class="vitals">
+      <div class="vrow hp"><span>生命</span><span class="bar"><i></i></span><span>80 / 100</span></div>
+      <div class="vrow st"><span>体力</span><span class="bar"><i></i></span><span>62 / 100</span></div>
+    </div>
+
+    <div class="quick">
+      <span class="lbl">快捷使用</span>
+      <div class="qslot"><span class="key">6</span><span class="it q-white"></span></div>
+      <div class="qslot"><span class="key">7</span></div>
+      <div class="qslot"><span class="key">8</span></div>
+      <div class="qslot"><span class="key">9</span></div>
+      <div class="qslot"><span class="key">0</span></div>
+    </div>
+
+    <div class="hints">
+      <span class="h"><span class="hb">F</span>拾取</span>
+      <span class="h"><span class="hb">R</span>旋转</span>
+      <span class="h"><span class="hb">右键</span>快速移动</span>
+      <span class="h"><span class="hb">Esc</span>关闭</span>
+    </div>
+  </footer>
+
+</div>
+
+<div id="tip"></div>
+
+<div id="devbar">
+  <button data-act="search" aria-pressed="true">容器 · 开箱</button>
+  <button data-act="cols" aria-pressed="false">三列底板</button>
+</div>
+
+<script>
+  const ITEMS = {
+    medkit:   { name:'医疗包',  q:'purple', price:3500 },
+    firstaid: { name:'急救包',  q:'blue',   price:1800 },
+    bandage:  { name:'绷带',    q:'green',  price:320  },
+    cpu:      { name:'CPU',     q:'gold',   price:9800 },
+    gpu:      { name:'显卡',    q:'gold',   price:12400 },
+    battery:  { name:'电池',    q:'white',  price:540  },
+    bolt:     { name:'螺栓',    q:'white',  price:90   },
+    cash:     { name:'现金',    q:'green',  price:2000 },
+    key:      { name:'铁钥匙',  q:'gold',   price:1600 },
+    card:     { name:'门禁卡',  q:'purple', price:4200 }
+  };
+
+  const tip = document.getElementById('tip');
+  document.addEventListener('mousemove', e => {
+    tip.style.left = e.clientX + 'px';
+    tip.style.top  = e.clientY + 'px';
+  });
+
+  function itemEl(key, w = 1, h = 1, count = null){
+    const d = ITEMS[key];
+    const el = document.createElement('div');
+    el.className = 'item q-' + d.q;
+    el.style.gridColumn = 'span ' + w;
+    el.style.gridRow = 'span ' + h;
+    el.innerHTML = '<span class="glow"></span><span class="nm">' + d.name + '</span>' +
+                   (count ? '<span class="qt">×' + count + '</span>' : '');
+    el.addEventListener('mouseenter', () => {
+      tip.innerHTML = '<b>' + d.name + '</b><span>¥' + d.price.toLocaleString() + '</span>' +
+                      (count ? ' <span style="color:#8b9095">×' + count + '</span>' : '');
+      tip.style.opacity = 1;
+    });
+    el.addEventListener('mouseleave', () => { tip.style.opacity = 0; });
+    return el;
+  }
+
+  function cellEl(){
+    const el = document.createElement('div');
+    el.className = 'gcell';
+    return el;
+  }
+
+  /** 按「行×列」铺格子，再按坐标把物品放进去 */
+  function build(id, cols, rows, placed){
+    const g = document.getElementById(id);
+    g.style.gridTemplateColumns = 'repeat(' + cols + ', var(--cell))';
+
+    for (let i = 0; i < cols * rows; i++) g.appendChild(cellEl());
+
+    placed.forEach(p => {
+      const el = itemEl(p.k, p.w || 1, p.h || 1, p.n);
+      el.style.gridColumn = (p.c + 1) + ' / span ' + (p.w || 1);
+      el.style.gridRow    = (p.r + 1) + ' / span ' + (p.h || 1);
+      el.style.position = 'relative';
+      g.appendChild(el);
+    });
+  }
+
+  build('pocketGrid', 5, 1, [
+    { k:'bandage', c:0, r:0, n:2 },
+    { k:'battery', c:2, r:0 }
+  ]);
+
+  build('rigGrid', 4, 2, [
+    { k:'firstaid', c:0, r:0, w:1, h:2 },
+    { k:'bolt',     c:1, r:0, n:5 },
+    { k:'bandage',  c:2, r:0, n:3 }
+  ]);
+
+  build('bagGrid', 10, 6, [
+    { k:'gpu',    c:0, r:0, w:2 },
+    { k:'medkit', c:3, r:0, w:2, h:2 },
+    { k:'cash',   c:6, r:0, n:5 },
+    { k:'battery',c:0, r:2 },
+    { k:'bolt',   c:1, r:2, n:8 }
+  ]);
+
+  build('safeGrid', 2, 2, [
+    { k:'card', c:0, r:0 },
+    { k:'key',  c:1, r:1 }
+  ]);
+
+  // 搜索网格：4 × 6，最后一格"已搜出"
+  const field = document.getElementById('field');
+  for (let i = 0; i < 24; i++){
+    const c = document.createElement('div');
+    c.className = 'fcell' + (i === 9 ? ' found' : '');
+    field.appendChild(c);
+  }
+
+  // ── 调试开关 ────────────────────────────────────────
+  const screenEl = document.getElementById('screen');
+
+  document.getElementById('devbar').addEventListener('click', e => {
+    const btn = e.target.closest('button');
+    if (!btn) return;
+
+    const on = btn.getAttribute('aria-pressed') !== 'true';
+    btn.setAttribute('aria-pressed', on);
+
+    if (btn.dataset.act === 'search'){
+      screenEl.classList.toggle('no-search', !on);
+      btn.textContent = on ? '容器 · 开箱' : '容器 · 收起';
+    }
+
+    if (btn.dataset.act === 'cols'){
+      screenEl.classList.toggle('show-cols', on);
+    }
+  });
+</script>
+</body>
+</html>
