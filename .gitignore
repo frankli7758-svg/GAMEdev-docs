@@ -12,6 +12,7 @@
 *.log
 # batchmode 跑 EditMode 测试时生成的结果文件（每次内容不同）
 /Tools/test_result.xml
+/.workbuddy/testout/
 
 # ── 系统与编辑器垃圾 ──
 Thumbs.db
